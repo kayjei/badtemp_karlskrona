@@ -5,5 +5,4 @@ Home assistant integration to read and display temperatures for swimareas in Kar
 ```
 sensor:
     - platform: swimareas_karlskrona
-    ```
-    
+```
