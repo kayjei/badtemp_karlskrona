@@ -1,0 +1,8 @@
+{
+  "domain": "swimareas_karlskrona",
+  "name": "Water Temperature for Karlskrona Swim Areas",
+  "documentation": "https://github.com/kayjei/swimareas_karlskrona",
+  "dependencies": [],
+  "codeowners": ["kayjei"],
+  "requirements": ["requests"]
+}
