@@ -52,7 +52,7 @@ class SensorDevice(Entity):
         self._friendly_name = name
         self.update()
 
-    @Throttle(UPDATE_INTERVAL)
+#    @Throttle(UPDATE_INTERVAL)
     def update(self):
         """Temperature"""
         for json in ApiRequest().json_data()["Payload"]["swimAreas"]:
