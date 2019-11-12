@@ -45,7 +45,7 @@ class SensorDevice(Entity):
     def __init__(self, id, temperature, latitude, longitude, timestamp, name):
         self._device_id = id
         self._state = temperature
-        self._entity_id = 'sensor.swimarea_' + str.lower(self._device_id)
+        self._entity_id = 'sensor.badtemp_' + str.lower(self._device_id)
         self._latitude = latitude
         self._longitude = longitude
         self._timestamp = timestamp
