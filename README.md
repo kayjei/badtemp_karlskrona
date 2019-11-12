@@ -4,7 +4,7 @@ Home assistant integration to read and display temperatures for swimareas in Kar
 2. Add configuration to your ```configuration.yaml```
 ```
 sensor:
-    - platform: swimareas_karlskrona
+    - platform: badtemp_karlskrona
 ```
 
 Sensors will be available as sensor.swimarea_xxxxxxx and positioned at your map in HA.

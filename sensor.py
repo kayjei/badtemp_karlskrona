@@ -17,7 +17,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-URL = 'https://service.karlskrona.se/FileStorageArea/Documents/bad/swimAreas.geojson'
+URL = 'https://service.karlskrona.se/FileStorageArea/Documents/bad/swimAreas.json'
 
 UPDATE_INTERVAL = datetime.timedelta(minutes=30)
 
@@ -27,15 +27,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = response.json()
 
     devices = []
-    for json in dev["features"]:
+    for json in dev["Payload"]["swimAreas"]:
         _LOGGER.debug("Device: " + str(json))
-        name = str(json["properties"]["nameArea"]).capitalize()
-#        id = str.lower(name).replace("\xe5","a").replace("\xe4","a").replace("\xf6","o")
-        id = str(json["properties"]["idArea"]).split('-')[4]
-        temp = float(json["properties"]["temperatureWater"])
-        lat = str(json["geometry"]["coordinates"][1])
-        lon = str(json["geometry"]["coordinates"][0])
-        timestamp = datetime.datetime.strptime(str(json["properties"]["timeStamp"]).split('.')[0], "%Y-%m-%dT%H:%M:%S")
+        name = str(json["nameArea"]).capitalize()
+        id = str.lower(name).replace("\xe5","a").replace("\xe4","a").replace("\xf6","o")
+        temp = float(json["temperatureWater"])
+        lat = str(json["geometryArea"]["y"])
+        lon = str(json["geometryArea"]["x"])
+        timestamp = datetime.datetime.strptime(str(json["timeStamp"]).split('.')[0], "%Y-%m-%dT%H:%M:%S")
 
         devices.append(SensorDevice(id, temp, lat, lon, timestamp, name))
         _LOGGER.info("Adding sensor: " + str(id))
@@ -46,7 +45,7 @@ class SensorDevice(Entity):
     def __init__(self, id, temperature, latitude, longitude, timestamp, name):
         self._device_id = id
         self._state = temperature
-        self._entity_id = 'sensor.swimarea_' + str.lower(self._device_id)
+        self._entity_id = 'sensor.badtemp_' + str.lower(self._device_id)
         self._latitude = latitude
         self._longitude = longitude
         self._timestamp = timestamp
@@ -56,13 +55,12 @@ class SensorDevice(Entity):
     @Throttle(UPDATE_INTERVAL)
     def update(self):
         """Temperature"""
-        for json in ApiRequest().json_data()["features"]:
-#           if str.lower(json["properties"]["nameArea"]).replace("\xe5","a").replace("\xe4","a").replace("\xf6","o") == str.lower(self._device_id):
-           if str(json["properties"]["idArea"]).split('-')[4] == str(self._device_id):
-                self._state = float(json["properties"]["temperatureWater"])
-                self._latitude = str(json["geometry"]["coordinates"][1])
-                self._longitude = str(json["geometry"]["coordinates"][0])
-                self._timestamp = datetime.datetime.strptime(str(json["properties"]["timeStamp"]).split('.')[0], "%Y-%m-%dT%H:%M:%S")
+        for json in ApiRequest().json_data()["Payload"]["swimAreas"]:
+           if str.lower(json["nameArea"]).replace("\xe5","a").replace("\xe4","a").replace("\xf6","o") == str.lower(self._device_id):
+                self._state = float(json["temperatureWater"])
+                self._latitude = str(json["geometryArea"]["y"])
+                self._longitude = str(json["geometryArea"]["x"])
+                self._timestamp = datetime.datetime.strptime(str(json["timeStamp"]).split('.')[0], "%Y-%m-%dT%H:%M:%S")
                 _LOGGER.debug("Temp is " + str(self._state) + " for " + str(self._device_id))
 
     @property
