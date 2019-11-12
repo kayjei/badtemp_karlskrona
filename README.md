@@ -7,4 +7,4 @@ sensor:
     - platform: badtemp_karlskrona
 ```
 
-Sensors will be available as sensor.swimarea_xxxxxxx and positioned at your map in HA.
+Sensors will be available as sensor.badtemp_xxxxxxx and positioned at your map in HA.
