@@ -31,13 +31,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.debug("Device: " + str(json))
         name = str(json["nameArea"]).capitalize()
         id = str.lower(name).replace("\xe5","a").replace("\xe4","a").replace("\xf6","o")
-        temp = float(json["temperatureWater"])
+        temp = json["temperatureWater"]
         lat = str(json["geometryArea"]["y"])
         lon = str(json["geometryArea"]["x"])
         timestamp = datetime.datetime.strptime(str(json["timeStamp"]).split('.')[0], "%Y-%m-%dT%H:%M:%S")
 
-        devices.append(SensorDevice(id, temp, lat, lon, timestamp, name))
-        _LOGGER.info("Adding sensor: " + str(id))
+        if isinstance(temp, float):
+          devices.append(SensorDevice(id, temp, lat, lon, timestamp, name))
+          _LOGGER.info("Adding sensor: " + str(id))
+
+        else:
+          _LOGGER.info("Skipping sensor: " + str(id) + " (temp is no float)")
 
     add_devices(devices)
 
