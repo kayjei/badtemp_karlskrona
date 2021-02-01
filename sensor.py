@@ -1,7 +1,7 @@
 """
 A sensor created to read temperature from swimareas in Karlskrona Sweden
 For more details about this platform, please refer to the documentation at
-https://github.com/kayjei/swimareas_karlskrona
+https://github.com/kayjei/swimareas_karlskrona 
 """
 import logging
 import json
