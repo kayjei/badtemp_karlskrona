@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 URL = 'https://service.karlskrona.se/FileStorageArea/Documents/bad/swimAreas.json'
 
-UPDATE_INTERVAL = datetime.timedelta(minutes=1)
+UPDATE_INTERVAL = datetime.timedelta(minutes=30)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the sensor platform"""
