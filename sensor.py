@@ -63,7 +63,7 @@ class SensorDevice(Entity):
         for json in ApiRequest().json_data()["Payload"]["swimAreas"]:
            if str.lower(json["nameArea"]).replace("\xe5","a").replace("\xe4","a").replace("\xf6","o") == str.lower(self._device_id):
                 if self._state is not None:
-                  self._state = float(json["temperatureWater"])
+                  self._state = float(round(json["temperatureWater"], 1))
                 self._latitude = str(json["geometryArea"]["y"])
                 self._longitude = str(json["geometryArea"]["x"])
                 self._timestamp = datetime.datetime.strptime(str(json["timeStamp"]).split('.')[0], "%Y-%m-%dT%H:%M:%S")
