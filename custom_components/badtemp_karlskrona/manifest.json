@@ -4,5 +4,7 @@
   "documentation": "https://github.com/kayjei/swimareas_karlskrona",
   "dependencies": [],
   "codeowners": ["kayjei"],
-  "requirements": ["requests"]
+  "requirements": ["requests"],
+  "issue_tracker": "None",
+  "version": 0.2
 }
