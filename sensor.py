@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         lon = str(json["geometryArea"]["x"])
         timestamp = datetime.datetime.strptime(str(json["timeStamp"]).split('.')[0], "%Y-%m-%dT%H:%M:%S")
 
-        if isinstance(temp, float):
+        if isinstance(temp, float) or isinstance(temp, int):
           devices.append(SensorDevice(id, temp, lat, lon, timestamp, name))
           _LOGGER.info("Adding sensor: " + str(id))
 
