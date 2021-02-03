@@ -1,7 +1,7 @@
 """
 A sensor created to read temperature from swimareas in Karlskrona Sweden
 For more details about this platform, please refer to the documentation at
-https://github.com/kayjei/swimareas_karlskrona 
+https://github.com/kayjei/swimareas_karlskrona
 """
 import logging
 import json
@@ -41,7 +41,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
           _LOGGER.info("Adding sensor: " + str(id))
 
         else:
-          _LOGGER.info("Skipping sensor: " + str(id) + " (temp is no float)")
+          devices.append(SensorDevice(id, None, lat, lon, timestamp, name))
+          _LOGGER.info("Adding faulty sensor: " + str(id) + " (temperature missing)")
 
     add_devices(devices)
 
@@ -61,7 +62,8 @@ class SensorDevice(Entity):
         """Temperature"""
         for json in ApiRequest().json_data()["Payload"]["swimAreas"]:
            if str.lower(json["nameArea"]).replace("\xe5","a").replace("\xe4","a").replace("\xf6","o") == str.lower(self._device_id):
-                self._state = float(json["temperatureWater"])
+                if self._state is not None:
+                  self._state = float(round(json["temperatureWater"], 1))
                 self._latitude = str(json["geometryArea"]["y"])
                 self._longitude = str(json["geometryArea"]["x"])
                 self._timestamp = datetime.datetime.strptime(str(json["timeStamp"]).split('.')[0], "%Y-%m-%dT%H:%M:%S")
@@ -97,7 +99,7 @@ class SensorDevice(Entity):
     def icon(self):
         """Return the icon of the sensor"""
         return 'mdi:coolant-temperature'
-    
+
     @property
     def device_class(self):
         """Return the device class of the sensor"""
