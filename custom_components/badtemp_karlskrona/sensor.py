@@ -5,7 +5,7 @@ https://github.com/kayjei/swimareas_karlskrona
 """
 import logging
 import json
-import requests
+import urllib
 import voluptuous as vol
 import datetime
 
@@ -19,24 +19,27 @@ _LOGGER = logging.getLogger(__name__)
 
 URL = 'https://service.karlskrona.se/FileStorageArea/Documents/bad/swimAreas.json'
 
-UPDATE_INTERVAL = datetime.timedelta(minutes=30)
+UPDATE_INTERVAL = datetime.timedelta(minutes=3)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the sensor platform"""
-    response = requests.get(URL)
-    dev = response.json()
+    headers = {"Content-type": "application/json"}
+    response = urllib.request.urlopen(URL)
+    response_json = json.dumps(json.loads(response.read()))
+
+    dev = json.loads(response_json)
 
     devices = []
-    for json in dev["Payload"]["swimAreas"]:
-        _LOGGER.debug("Device: " + str(json))
-        name = str(json["nameArea"]).capitalize()
+    for jsonr in dev["Payload"]["swimAreas"]:
+        _LOGGER.debug("Device: " + str(jsonr))
+        name = str(jsonr["nameArea"]).capitalize()
         id = str.lower(name).replace("\xe5","a").replace("\xe4","a").replace("\xf6","o")
-        temp = json["temperatureWater"]
-        lat = str(json["geometryArea"]["y"])
-        lon = str(json["geometryArea"]["x"])
-        timestamp = datetime.datetime.strptime(str(json["timeStamp"]).split('.')[0], "%Y-%m-%dT%H:%M:%S")
+        temp = float(round(jsonr["temperatureWater"], 1))
+        lat = str(jsonr["geometryArea"]["y"])
+        lon = str(jsonr["geometryArea"]["x"])
+        timestamp = datetime.datetime.strptime(str(jsonr["timeStamp"]).split('.')[0], "%Y-%m-%dT%H:%M:%S")
 
-        if isinstance(temp, float) or isinstance(temp, int):
+        if isinstance(temp, float):
           devices.append(SensorDevice(id, temp, lat, lon, timestamp, name))
           _LOGGER.info("Adding sensor: " + str(id))
 
@@ -60,13 +63,13 @@ class SensorDevice(Entity):
     @Throttle(UPDATE_INTERVAL)
     def update(self):
         """Temperature"""
-        for json in ApiRequest().json_data()["Payload"]["swimAreas"]:
-           if str.lower(json["nameArea"]).replace("\xe5","a").replace("\xe4","a").replace("\xf6","o") == str.lower(self._device_id):
+        for jsonr in ApiRequest().json_data()["Payload"]["swimAreas"]:
+           if str.lower(jsonr["nameArea"]).replace("\xe5","a").replace("\xe4","a").replace("\xf6","o") == str.lower(self._device_id):
                 if self._state is not None:
-                  self._state = float(round(json["temperatureWater"], 1))
-                self._latitude = str(json["geometryArea"]["y"])
-                self._longitude = str(json["geometryArea"]["x"])
-                self._timestamp = datetime.datetime.strptime(str(json["timeStamp"]).split('.')[0], "%Y-%m-%dT%H:%M:%S")
+                  self._state = float(round(jsonr["temperatureWater"], 1))
+                self._latitude = str(jsonr["geometryArea"]["y"])
+                self._longitude = str(jsonr["geometryArea"]["x"])
+                self._timestamp = datetime.datetime.strptime(str(jsonr["timeStamp"]).split('.')[0], "%Y-%m-%dT%H:%M:%S")
                 _LOGGER.debug("Temp is " + str(self._state) + " for " + str(self._device_id))
 
     @property
@@ -122,8 +125,8 @@ class ApiRequest:
     def update(self):
         """Temperature"""
         _LOGGER.debug("Sending API request to: " + URL)
-        response = requests.get(URL)
-        self._json_response = response.json()
+        response = urllib.request.urlopen(URL)
+        self._json_response = json.loads(response.read())
 
     def json_data(self):
         """Keep json data"""
