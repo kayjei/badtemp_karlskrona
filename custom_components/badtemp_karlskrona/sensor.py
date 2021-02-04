@@ -8,6 +8,7 @@ import json
 import urllib
 import voluptuous as vol
 import datetime
+import secrets
 
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -18,18 +19,26 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 
 URL = 'https://service.karlskrona.se/FileStorageArea/Documents/bad/swimAreas.json'
+PERS_JSON = '.badtemp_karlskrona.json'
 
-UPDATE_INTERVAL = datetime.timedelta(minutes=3)
+UPDATE_INTERVAL = datetime.timedelta(minutes=30)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the sensor platform"""
     headers = {"Content-type": "application/json"}
     response = urllib.request.urlopen(URL)
     response_json = json.dumps(json.loads(response.read()))
+    _LOGGER.debug("Response: " + response_json)
+    with open(PERS_JSON, "w") as outfile:
+        json.dump(response_json, outfile)
 
     dev = json.loads(response_json)
 
     devices = []
+    devices.append(SensorDevice('0_poller', None, None, None, datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"), '0_poller'))
+    _LOGGER.info("Adding poller sensor: Poller")
+
+
     for jsonr in dev["Payload"]["swimAreas"]:
         _LOGGER.debug("Device: " + str(jsonr))
         name = str(jsonr["nameArea"]).capitalize()
@@ -63,14 +72,19 @@ class SensorDevice(Entity):
     @Throttle(UPDATE_INTERVAL)
     def update(self):
         """Temperature"""
-        for jsonr in ApiRequest().json_data()["Payload"]["swimAreas"]:
-           if str.lower(jsonr["nameArea"]).replace("\xe5","a").replace("\xe4","a").replace("\xf6","o") == str.lower(self._device_id):
-                if self._state is not None:
-                  self._state = float(round(jsonr["temperatureWater"], 1))
-                self._latitude = str(jsonr["geometryArea"]["y"])
-                self._longitude = str(jsonr["geometryArea"]["x"])
-                self._timestamp = datetime.datetime.strptime(str(jsonr["timeStamp"]).split('.')[0], "%Y-%m-%dT%H:%M:%S")
-                _LOGGER.debug("Temp is " + str(self._state) + " for " + str(self._device_id))
+
+        if str.lower(self._device_id) == '0_poller':
+            ApiRequest.call()
+
+        else:
+            for jsonr in ReadJson().json_data()["Payload"]["swimAreas"]:
+               if str.lower(jsonr["nameArea"]).replace("\xe5","a").replace("\xe4","a").replace("\xf6","o") == str.lower(self._device_id):
+                    if self._state is not None:
+                      self._state = float(round(jsonr["temperatureWater"], 1))
+                    self._latitude = str(jsonr["geometryArea"]["y"])
+                    self._longitude = str(jsonr["geometryArea"]["x"])
+                    self._timestamp = datetime.datetime.strptime(str(jsonr["timeStamp"]).split('.')[0], "%Y-%m-%dT%H:%M:%S")
+                    _LOGGER.debug("Temp is " + str(self._state) + " for " + str(self._device_id))
 
     @property
     def entity_id(self):
@@ -111,22 +125,42 @@ class SensorDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the attribute(s) of the sensor"""
-        return {
-            "latitude": self._latitude,
-            "longitude": self._longitude,
-            "lastUpdate": self._timestamp
-        }
+        if self._latitude is None or self._longitude is None:
+            return {
+                "lastUpdate": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+            }
+        else:
+            return {
+                "latitude": self._latitude,
+                "longitude": self._longitude,
+                "lastUpdate": self._timestamp
+                }
 
 class ApiRequest:
+
+    def call():
+        """Temperature"""
+        _LOGGER.debug("Sending API request to: " + URL)
+        response = urllib.request.urlopen(URL)
+        response_json = json.dumps(json.loads(response.read()))
+        _LOGGER.debug("Response: " + response_json)
+        with open(PERS_JSON, "w") as outfile:
+            json.dump(response_json, outfile)
+
+        return True
+
+
+class ReadJson:
     def __init__(self):
         self.update()
 
     @Throttle(UPDATE_INTERVAL)
     def update(self):
         """Temperature"""
-        _LOGGER.debug("Sending API request to: " + URL)
-        response = urllib.request.urlopen(URL)
-        self._json_response = json.loads(response.read())
+        _LOGGER.debug("Reading " + PERS_JSON + " for device")
+        with open(PERS_JSON) as json_file:
+            json_datas = json.loads(json.load(json_file))
+        self._json_response = json_datas
 
     def json_data(self):
         """Keep json data"""
