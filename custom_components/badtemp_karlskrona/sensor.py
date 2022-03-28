@@ -43,12 +43,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.debug("Device: " + str(jsonr))
         name = str(jsonr["nameArea"]).capitalize()
         id = str.lower(name).replace("\xe5","a").replace("\xe4","a").replace("\xf6","o")
-        temp = float(round(jsonr["temperatureWater"], 1))
         lat = str(jsonr["geometryArea"]["y"])
         lon = str(jsonr["geometryArea"]["x"])
         timestamp = datetime.datetime.strptime(str(jsonr["timeStamp"]).split('.')[0], "%Y-%m-%dT%H:%M:%S")
 
-        if isinstance(temp, float):
+        if isinstance(jsonr["temperatureWater"], float):
+          temp = float(round(jsonr["temperatureWater"], 1))
           devices.append(SensorDevice(id, temp, lat, lon, timestamp, name, poller_entity))
           _LOGGER.info("Adding sensor: " + str(id))
 
