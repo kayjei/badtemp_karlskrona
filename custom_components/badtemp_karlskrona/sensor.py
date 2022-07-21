@@ -123,7 +123,7 @@ class SensorDevice(Entity):
         return 'temperature'
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attribute(s) of the sensor"""
         if self._latitude is None or self._longitude is None:
             return {
